@@ -114,7 +114,7 @@ const findDirectReportsMissingTraining = reports => {
   });
 }
 
-const createComponentMyIncompleteTrainings = (myEmail) => {
+const createMyIncompleteTrainingsComponent = (myEmail) => {
   const myMissingTrainings = findIncompleteTrainingsByEmail(myEmail).map((r) => ({ body: r, type: Markdown }))
 
   if (!myMissingTrainings.length) {
@@ -142,15 +142,15 @@ const decodeJWTToken = (token) => {
 const createDirectReportsWhisper = async (directReports) => {
   
   if (directReports) {
-    const directReportsMissingTraining = findDirectReportsMissingTraining(directReports);
+    const missingTraining = findDirectReportsMissingTraining(directReports);
 
-    if (directReportsMissingTraining.length) {
-      const components = directReportsMissingTraining.map((drMissingTraining) => {
+    if (missingTraining.length) {
+      const components = missingTraining.map((mt) => {
         return {
           type: Box,
           justifyContent: Left,
           direction: Vertical,
-          children: [{type: Markdown, body: `${drMissingTraining.name} is missing following trainings: ${drMissingTraining.missingTraining.join(', ')}`}] //drMissingTraining.missingTraining.map((mt) => ({ type: ListPair, label: drMissingTraining.name, value: mt, copyable: true, style: whisper.Urgency.None }))
+          children: [{type: Markdown, body: `${mt.name} is missing following trainings: ${mt.missingTraining.join(', ')}`}] //drMissingTraining.missingTraining.map((mt) => ({ type: ListPair, label: drMissingTraining.name, value: mt, copyable: true, style: whisper.Urgency.None }))
         }
       });
 
@@ -160,10 +160,10 @@ const createDirectReportsWhisper = async (directReports) => {
         components
       });
 
-      // directReportsMissingTraining.forEach(async (directReportMissingTraining) => {
+      // missingTraining.forEach(async (mt) => {
       //   await whisper.create({
-      //     label: `${directReportMissingTraining.name} is Missing Following Trainings`,
-      //     components: directReportMissingTraining.missingTraining.map((mt) => ({ type: Markdown, body: mt }))
+      //     label: `${mt.name} is Missing Following Trainings`,
+      //     components: mt.missingTraining.map((t) => ({ type: Markdown, body: t }))
       //   });
       // });
     }
@@ -180,7 +180,7 @@ export const trainingWhisper = async (email) => {
   await whisper.create({
     label: 'My Missing Trainings',
     onClose: () => console.log('Closed Training Whisper'),
-    components: createComponentMyIncompleteTrainings(userEmail),
+    components: createMyIncompleteTrainingsComponent(userEmail),
   });
 
   await createDirectReportsWhisper([{email: 'test@test.com', firstName: 'T', lastName: 'C'}])
