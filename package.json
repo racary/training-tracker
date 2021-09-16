@@ -33,6 +33,7 @@
     "@babel/runtime-corejs2": "^7.13.10",
     "@oliveai/ldk": "^3.2.0",
     "babel-loader": "^8.2.2",
+    "buffer": "^6.0.3",
     "common-tags": "^1.8.0",
     "core-js": "^3.12.1",
     "date-fns": "^2.21.3",
@@ -71,6 +72,7 @@
     "permissions": {
       "clipboard": {},
       "filesystem": {},
+      "user": {},
       "network": {
         "urlDomains": [
           {

@@ -1,4 +1,5 @@
-import { whisper } from '@oliveai/ldk';
+import { user, whisper } from '@oliveai/ldk';
+import { Buffer } from 'buffer';
 
 const res = [
   {
@@ -62,13 +63,38 @@ const createComponent = (email) => {
     .filter((r) => r.user.email === email && !r.completion_date)
     .map((r) => ({ body: r.campaign_name, type: whisper.WhisperComponentType.Markdown }));
 
+  if (!trainingsByEmail.length) {
+    trainingsByEmail.push({
+      body: 'No missing trainings!!',
+      type: whisper.WhisperComponentType.Markdown,
+    });
+  }
   return trainingsByEmail;
 };
 
+const decodeJWTToken = (token) => {
+  try {
+    const base64Url = token.split('.')[1];
+    const base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/');
+    const jsonPayload = JSON.parse(Buffer.from(base64, 'base64').toString('utf-8'));
+    console.log(`json payload ==> ${jsonPayload}`);
+    return jsonPayload;
+  } catch (err) {
+    console.error('Failed to decode token', err);
+    throw err;
+  }
+};
+
 export const trainingWhisper = async (email) => {
+  let userEmail = email;
+  if (!userEmail) {
+    const jwtUser = decodeJWTToken(await user.jwt());
+    ({ email: userEmail } = jwtUser);
+  }
+  console.log(`current user email ==> ${userEmail}`);
   await whisper.create({
     label: 'Missing Trainings',
     onClose: () => console.log('Closed Training Whisper'),
-    components: createComponent(email),
+    components: createComponent(userEmail),
   });
 };

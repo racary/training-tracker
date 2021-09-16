@@ -10,8 +10,13 @@ const users = [
 
 const getEmailByUser = (userName) => {
   const res = users.find(({ user }) => user.toLowerCase() === userName);
-  console.info(`getEmailByUser res ${res}`);
-  return res.email;
+  if (res) {
+    console.info(`getEmailByUser res ${res}`);
+    return res.email;
+  }
+
+  console.log(`no user found with userName ${userName}`);
+  return '';
 };
 
 export const start = async () => {
