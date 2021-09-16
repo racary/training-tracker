@@ -1,7 +1,8 @@
 import { user, whisper } from '@oliveai/ldk';
 import { Buffer } from 'buffer';
+import network from '../aptitudes/network/network';
 
-const { Box, ListPair, Markdown } = whisper.WhisperComponentType;
+const { Box, Markdown } = whisper.WhisperComponentType;
 const { Left } = whisper.JustifyContent;
 const { Vertical } = whisper.Direction;
 
@@ -100,22 +101,25 @@ const res = [
 
 const findIncompleteTrainingsByEmail = (email) => {
   const incompleteTrainigs = res
-  .filter((r) => r.user.email === email && !r.completion_date)
-  .map(training => training.campaign_name);
+    .filter((r) => r.user.email === email && !r.completion_date)
+    .map((training) => training.campaign_name);
   return incompleteTrainigs;
-}
+};
 
-const findDirectReportsMissingTraining = reports => {
-  return reports.map(report => {
+const findDirectReportsMissingTraining = (reports) => {
+  return reports.map((report) => {
     return {
       name: `${report.firstName} ${report.lastName}`,
-      missingTraining: findIncompleteTrainingsByEmail(report.email)
-    }
+      missingTraining: findIncompleteTrainingsByEmail(report.email),
+    };
   });
-}
+};
 
-const createMyIncompleteTrainingsComponent = (myEmail) => {
-  const myMissingTrainings = findIncompleteTrainingsByEmail(myEmail).map((r) => ({ body: r, type: Markdown }))
+const createIncompleteTrainingsComponent = (myEmail) => {
+  const myMissingTrainings = findIncompleteTrainingsByEmail(myEmail).map((r) => ({
+    body: r,
+    type: Markdown,
+  }));
 
   if (!myMissingTrainings.length) {
     myMissingTrainings.push({
@@ -140,7 +144,6 @@ const decodeJWTToken = (token) => {
 };
 
 const createDirectReportsWhisper = async (directReports) => {
-  
   if (directReports) {
     const missingTraining = findDirectReportsMissingTraining(directReports);
 
@@ -150,14 +153,19 @@ const createDirectReportsWhisper = async (directReports) => {
           type: Box,
           justifyContent: Left,
           direction: Vertical,
-          children: [{type: Markdown, body: `${mt.name} is missing following trainings: ${mt.missingTraining.join(', ')}`}] //drMissingTraining.missingTraining.map((mt) => ({ type: ListPair, label: drMissingTraining.name, value: mt, copyable: true, style: whisper.Urgency.None }))
-        }
+          children: [
+            {
+              type: Markdown,
+              body: `${mt.name} is missing following trainings: ${mt.missingTraining.join(', ')}`,
+            },
+          ], // drMissingTraining.missingTraining.map((mt) => ({ type: ListPair, label: drMissingTraining.name, value: mt, copyable: true, style: whisper.Urgency.None }))
+        };
       });
 
       await whisper.create({
         label: 'Direct Reports Incomplete Training',
         onClose: () => console.log('Closed Direct Reports Training Whisper'),
-        components
+        components,
       });
 
       // missingTraining.forEach(async (mt) => {
@@ -168,7 +176,14 @@ const createDirectReportsWhisper = async (directReports) => {
       // });
     }
   }
-}
+};
+
+const getDirectReports = async (email) => {
+  const users = await network.getNamelyUsers();
+
+  const directReports = users.filter((u) => u.reportsTo.email === email);
+  return directReports;
+};
 
 export const trainingWhisper = async (email) => {
   let userEmail = email;
@@ -177,11 +192,14 @@ export const trainingWhisper = async (email) => {
     ({ email: userEmail } = jwtUser);
   }
   console.log(`current user email ==> ${userEmail}`);
+
+  const directReports = await getDirectReports(userEmail);
+
   await whisper.create({
     label: 'My Missing Trainings',
     onClose: () => console.log('Closed Training Whisper'),
-    components: createMyIncompleteTrainingsComponent(userEmail),
+    components: createIncompleteTrainingsComponent(userEmail),
   });
 
-  await createDirectReportsWhisper([{email: 'test@test.com', firstName: 'T', lastName: 'C'}])
+  await createDirectReportsWhisper(directReports);
 };

@@ -76,7 +76,7 @@
       "network": {
         "urlDomains": [
           {
-            "value": "*.fda.gov"
+            "value": "localhost"
           }
         ]
       },
