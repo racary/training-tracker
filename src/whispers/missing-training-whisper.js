@@ -185,21 +185,28 @@ const getDirectReports = async (email) => {
   return directReports;
 };
 
-export const trainingWhisper = async (email) => {
-  let userEmail = email;
-  if (!userEmail) {
-    const jwtUser = decodeJWTToken(await user.jwt());
-    ({ email: userEmail } = jwtUser);
-  }
-  console.log(`current user email ==> ${userEmail}`);
-
-  const directReports = await getDirectReports(userEmail);
+const trainingWhisper = async (email) => {
+  console.log(`current user email ==> ${email}`);
 
   await whisper.create({
     label: 'My Missing Trainings',
     onClose: () => console.log('Closed Training Whisper'),
-    components: createIncompleteTrainingsComponent(userEmail),
+    components: createIncompleteTrainingsComponent(email),
   });
+};
 
+const getEmailFromJWT = async () => {
+  const jwtUser = decodeJWTToken(await user.jwt());
+  const { email } = jwtUser;
+  return email;
+};
+
+const userAndDirectReportsTrainingWhisper = async () => {
+  const email = await getEmailFromJWT();
+  const directReports = await getDirectReports(email);
+
+  await trainingWhisper(email);
   await createDirectReportsWhisper(directReports);
 };
+
+export default { trainingWhisper, userAndDirectReportsTrainingWhisper };

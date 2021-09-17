@@ -1,5 +1,5 @@
 import { ui } from '@oliveai/ldk';
-import * as w from '../../whispers/missing-training-whisper';
+import w from '../../whispers/missing-training-whisper';
 
 const users = [
   {
