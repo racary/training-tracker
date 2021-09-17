@@ -39,7 +39,7 @@ const createIncompleteTrainingsComponent = async (myEmail) => {
 
     if (!component.length) {
       component.push({
-        body: 'No missing trainings for me!!',
+        body: 'No missing trainings!!',
         type: whisper.WhisperComponentType.Markdown,
       });
     }
@@ -105,10 +105,11 @@ const getDirectReports = async (email) => {
   return directReports;
 };
 
-const trainingWhisper = async (email) => {
+const trainingWhisper = async (email, userName) => {
+  const label = userName || 'My Missing Trainings';
   console.log(`creating whisper for ${email}`);
   await whisper.create({
-    label: 'My Missing Trainings',
+    label,
     onClose: () => console.log('Closed Training Whisper'),
     components: await createIncompleteTrainingsComponent(email),
   });
