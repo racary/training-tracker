@@ -1,18 +1,13 @@
 import { ui } from '@oliveai/ldk';
 import w from '../../whispers/missing-training-whisper';
+import network from '../network/network';
 
-const users = [
-  {
-    user: 'Sarah Thomas',
-    email: 's_thomas@kb4-demo.com',
-  },
-];
-
-const getEmailByUser = (userName) => {
-  const res = users.find(({ user }) => user.toLowerCase() === userName);
-  if (res) {
-    console.info(`getEmailByUser res ${res}`);
-    return res.email;
+const getEmailByUser = async (userName) => {
+  const user = await network.getNamelyUser(userName);
+  console.log(`found user ${user} for user name ${userName}`);
+  if (user) {
+    console.info(`getEmailByUser res ${JSON.stringify(user)}`);
+    return user.email;
   }
 
   console.log(`no user found with userName ${userName}`);
@@ -23,7 +18,7 @@ export const start = async () => {
   ui.listenGlobalSearch(async (value) => {
     console.info(`search bar value ${value}`);
 
-    const email = getEmailByUser(value.toLowerCase());
+    const email = await getEmailByUser(value.toLowerCase());
     await w.trainingWhisper(email);
   });
 

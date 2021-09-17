@@ -6,128 +6,45 @@ const { Box, Markdown } = whisper.WhisperComponentType;
 const { Left } = whisper.JustifyContent;
 const { Vertical } = whisper.Direction;
 
-const res = [
-  {
-    enrollment_id: 1425526,
-    content_type: 'Uploaded Policy',
-    module_name: 'Acceptable Use Policy',
-    user: {
-      id: 796742,
-      first_name: 'Sarah',
-      last_name: 'Thomas',
-      email: 'test@test.com',
-    },
-    campaign_name: 'OWASP 10',
-    enrollment_date: '2019-04-02T15:02:38.000Z',
-    start_date: '2019-04-02T15:02:38.000Z',
-    completion_date: '',
-    status: 'Passed',
-    time_spent: 2340,
-    policy_acknowledged: false,
-  },
-  {
-    enrollment_id: 1425526,
-    content_type: 'Uploaded Policy',
-    module_name: 'Acceptable Use Policy',
-    user: {
-      id: 796742,
-      first_name: 'Sarah',
-      last_name: 'Thomas',
-      email: 'test@test.com',
-    },
-    campaign_name: 'Compliance Training',
-    enrollment_date: '2019-04-02T15:02:38.000Z',
-    start_date: '2019-04-02T15:02:38.000Z',
-    completion_date: '',
-    status: 'Passed',
-    time_spent: 2340,
-    policy_acknowledged: false,
-  },
-  {
-    enrollment_id: 1425526,
-    content_type: 'Uploaded Policy',
-    module_name: 'Acceptable Use Policy',
-    user: {
-      id: 796742,
-      first_name: 'Sarah',
-      last_name: 'Thomas',
-      email: 's_thomas@kb4-demo.com',
-    },
-    campaign_name: 'New Employee Policies',
-    enrollment_date: '2019-04-02T15:02:38.000Z',
-    start_date: '2019-04-02T15:02:38.000Z',
-    completion_date: '',
-    status: 'Passed',
-    time_spent: 2340,
-    policy_acknowledged: false,
-  },
-  {
-    enrollment_id: 1425526,
-    content_type: 'Uploaded Policy',
-    module_name: 'Acceptable Use Policy',
-    user: {
-      id: 796742,
-      first_name: 'Sarah',
-      last_name: 'Thomas',
-      email: 's_thomas@kb4-demo.com',
-    },
-    campaign_name: 'New Employee Policies',
-    enrollment_date: '2019-04-02T15:02:38.000Z',
-    start_date: '2019-04-02T15:02:38.000Z',
-    completion_date: '2019-04-02T15:02:38.000Z',
-    status: 'Passed',
-    time_spent: 2340,
-    policy_acknowledged: false,
-  },
-  {
-    enrollment_id: 1425526,
-    content_type: 'Uploaded Policy',
-    module_name: 'Acceptable Use Policy',
-    user: {
-      id: 796742,
-      first_name: 'Sarah',
-      last_name: 'Thomas',
-      email: 's_thomas@kb4-demo.com',
-    },
-    campaign_name: 'New Employee Policies',
-    enrollment_date: '2019-04-02T15:02:38.000Z',
-    start_date: '2019-04-02T15:02:38.000Z',
-    completion_date: '2019-04-02T15:02:38.000Z',
-    status: 'Passed',
-    time_spent: 2340,
-    policy_acknowledged: false,
-  },
-];
-
-const findIncompleteTrainingsByEmail = (email) => {
-  const incompleteTrainigs = res
-    .filter((r) => r.user.email === email && !r.completion_date)
+const findIncompleteTrainingsByEmail = async (email) => {
+  const trainings = await network.getTrainingsByEmail(email);
+  const incompleteTrainigs = trainings
+    .filter((r) => !r.completion_date)
     .map((training) => training.campaign_name);
   return incompleteTrainigs;
 };
 
-const findDirectReportsMissingTraining = (reports) => {
-  return reports.map((report) => {
-    return {
-      name: `${report.firstName} ${report.lastName}`,
-      missingTraining: findIncompleteTrainingsByEmail(report.email),
-    };
-  });
+const findDirectReportsMissingTraining = async (reports) => {
+  return Promise.all(
+    reports.map(async (report) => {
+      return {
+        name: `${report.firstName} ${report.lastName}`,
+        missingTraining: await findIncompleteTrainingsByEmail(report.email),
+      };
+    })
+  );
 };
 
-const createIncompleteTrainingsComponent = (myEmail) => {
-  const myMissingTrainings = findIncompleteTrainingsByEmail(myEmail).map((r) => ({
-    body: r,
-    type: Markdown,
-  }));
+const createIncompleteTrainingsComponent = async (myEmail) => {
+  let component = [];
+  if (myEmail) {
+    const incompleteTrainings = await findIncompleteTrainingsByEmail(myEmail);
+    console.log(
+      `${myEmail} has following incomplete trainings ==> ${JSON.stringify(incompleteTrainings)}`
+    );
+    component = incompleteTrainings.map((r) => ({
+      body: r,
+      type: Markdown,
+    }));
 
-  if (!myMissingTrainings.length) {
-    myMissingTrainings.push({
-      body: 'No missing trainings for me!!',
-      type: whisper.WhisperComponentType.Markdown,
-    });
+    if (!component.length) {
+      component.push({
+        body: 'No missing trainings for me!!',
+        type: whisper.WhisperComponentType.Markdown,
+      });
+    }
   }
-  return myMissingTrainings;
+  return component;
 };
 
 const decodeJWTToken = (token) => {
@@ -144,10 +61,13 @@ const decodeJWTToken = (token) => {
 };
 
 const createDirectReportsWhisper = async (directReports) => {
-  if (directReports) {
-    const missingTraining = findDirectReportsMissingTraining(directReports);
+  if (directReports.length) {
+    console.log('direct reports exist');
+    const missingTraining = await findDirectReportsMissingTraining(directReports);
 
     if (missingTraining.length) {
+      console.log('direct reports are missing trainings');
+
       const components = missingTraining.map((mt) => {
         return {
           type: Box,
@@ -186,12 +106,11 @@ const getDirectReports = async (email) => {
 };
 
 const trainingWhisper = async (email) => {
-  console.log(`current user email ==> ${email}`);
-
+  console.log(`creating whisper for ${email}`);
   await whisper.create({
     label: 'My Missing Trainings',
     onClose: () => console.log('Closed Training Whisper'),
-    components: createIncompleteTrainingsComponent(email),
+    components: await createIncompleteTrainingsComponent(email),
   });
 };
 
@@ -204,7 +123,9 @@ const getEmailFromJWT = async () => {
 const userAndDirectReportsTrainingWhisper = async () => {
   const email = await getEmailFromJWT();
   const directReports = await getDirectReports(email);
-
+  console.log(
+    `current user email ${email} has following direct reports ${JSON.stringify(directReports)}`
+  );
   await trainingWhisper(email);
   await createDirectReportsWhisper(directReports);
 };
