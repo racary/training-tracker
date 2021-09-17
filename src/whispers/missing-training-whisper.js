@@ -106,7 +106,7 @@ const getDirectReports = async (email) => {
 };
 
 const trainingWhisper = async (email, userName) => {
-  const label = userName || 'My Missing Trainings';
+  const label = userName ? `${userName}'s Missing Trainings` : 'My Missing Trainings';
   console.log(`creating whisper for ${email}`);
   await whisper.create({
     label,
