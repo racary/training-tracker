@@ -16,7 +16,7 @@ const getEmailByUser = async (userName) => {
 const buildName = (user) => `${user.firstName} ${user.lastName}`;
 
 export const start = async () => {
-  ui.listenGlobalSearch(async (value) => {
+  await ui.listenGlobalSearch(async (value) => {
     console.info(`search bar value ${value}`);
 
     const user = await getEmailByUser(value.toLowerCase());
