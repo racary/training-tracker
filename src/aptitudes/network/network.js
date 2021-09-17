@@ -7,10 +7,11 @@ const getNamelyUsers = async () => {
         Accept: ['application/json'],
       },
       method: 'GET',
-      url: 'localhost:3000/api/users/namely',
+      url: 'http://127.0.0.1:3001/api/users/namely',
     });
 
     const decoded = await network.decode(res.body);
+    console.log(`decoded payload ==> ${decoded}`);
     return JSON.parse(decoded);
   } catch (err) {
     console.error('failed to get namely users ', err);
