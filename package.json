@@ -76,7 +76,7 @@
       "network": {
         "urlDomains": [
           {
-            "value": "localhost:3000"
+            "value": "127.0.0.1:3000/"
           }
         ]
       },

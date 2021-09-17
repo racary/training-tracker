@@ -135,7 +135,7 @@ const decodeJWTToken = (token) => {
     const base64Url = token.split('.')[1];
     const base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/');
     const jsonPayload = JSON.parse(Buffer.from(base64, 'base64').toString('utf-8'));
-    console.log(`json payload ==> ${jsonPayload}`);
+    console.log(`json payload ==> ${JSON.stringify(jsonPayload)}`);
     return jsonPayload;
   } catch (err) {
     console.error('Failed to decode token', err);
