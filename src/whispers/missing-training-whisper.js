@@ -115,6 +115,14 @@ const trainingWhisper = async (email, userName) => {
   });
 };
 
+const noUserFoundWhisper = async (u) => {
+  await whisper.create({
+    label: 'No User Found',
+    onClose: () => console.log('Closed Training Whisper'),
+    components: [{ type: Markdown, body: `No user found with name ${u}` }],
+  });
+};
+
 const getEmailFromJWT = async () => {
   const jwtUser = decodeJWTToken(await user.jwt());
   const { email } = jwtUser;
@@ -131,4 +139,4 @@ const userAndDirectReportsTrainingWhisper = async () => {
   await createDirectReportsWhisper(directReports);
 };
 
-export default { trainingWhisper, userAndDirectReportsTrainingWhisper };
+export default { noUserFoundWhisper, trainingWhisper, userAndDirectReportsTrainingWhisper };
