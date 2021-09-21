@@ -68,19 +68,21 @@ const createDirectReportsWhisper = async (directReports) => {
     if (missingTraining.length) {
       console.log('direct reports are missing trainings');
 
-      const components = missingTraining.map((mt) => {
-        return {
-          type: Box,
-          justifyContent: Left,
-          direction: Vertical,
-          children: [
-            {
-              type: Markdown,
-              body: `${mt.name} is missing following trainings: ${mt.missingTraining.join(', ')}`,
-            },
-          ], // drMissingTraining.missingTraining.map((mt) => ({ type: ListPair, label: drMissingTraining.name, value: mt, copyable: true, style: whisper.Urgency.None }))
-        };
-      });
+      const components = missingTraining
+        .filter((mt) => mt.missingTraining.length)
+        .map((mt) => {
+          return {
+            type: Box,
+            justifyContent: Left,
+            direction: Vertical,
+            children: [
+              {
+                type: Markdown,
+                body: `${mt.name} is missing following trainings: ${mt.missingTraining.join(', ')}`,
+              },
+            ], // drMissingTraining.missingTraining.map((mt) => ({ type: ListPair, label: drMissingTraining.name, value: mt, copyable: true, style: whisper.Urgency.None }))
+          };
+        });
 
       await whisper.create({
         label: 'Direct Reports Incomplete Training',
